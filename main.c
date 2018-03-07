@@ -1,87 +1,91 @@
 /*
- * ==================================================
- * == Lesson 2. Homework
- * == Student: Andrei Solovetov
- * == Date: 04-mar-2018
- * "==================================================
- */
-
-/*
- * Ответ к задаче из ЕГЭ:
- * G(6) = 13
- */
+* ==================================================
+* == Lesson 3. Homework
+* == Student: Andrei Solovetov
+* == Date: 07-mar-2018
+* "==================================================
+*/
 
 #include <stdio.h>
+#include <stdlib.h>
 
-#define INT_LENGTH 32
+void fillArray(int *arr, int len) {
+    int i;
+    for (i = 0; i < len; i++)
+        arr[i] = rand() % 100;
+}
 
-void decToBin(int num);
-void decToBinStep(int num, int *res, int position);
-int powerLoop(int num, int power);
-int powerRecursion(int num, int power);
+void printArray(int *arr, int len) {
+    int i;
+    for (i = 0; i < len; i++)
+        printf("%d ", arr[i]);
+    puts("");
+}
+
+void swap(int *a, int *b) {
+    *a ^= *b;
+    *b ^= *a;
+    *a ^= *b;
+}
+
+int bubbleSort(int *arr, int len) {
+    int operations = 0;
+    int i;
+    int j;
+    for (i = 0; i < len; i++)
+        for (j = 0; j < len - 1; j++)
+            if (arr[j] > arr[j + 1]) {
+                swap(&arr[j], &arr[j + 1]);
+                operations++;
+            }
+
+    return operations;
+}
+
+int modifiedBubbleSort(int *arr, int len) {
+    int operations = 0;
+    int i;
+    int j;
+    /*
+     * Отступ от правого края массива. На каждой итерации внешнего цикла в правую часть
+     * "всплывает" максимальный элемент, а значит есть смысл двигать правую границу влево
+     */
+    int offset = 0;
+
+    for (i = 0; i < len - offset; i++){
+        for (j = 0; j < len - offset - 1; j++) {
+            /*
+             * А почему бы не двигать значения через один элемент дополнительно ?
+             */
+            if (j < len - offset - 2 && arr[j] > arr[j + 2]) {
+                swap(&arr[j], &arr[j + 2]);
+                operations++;
+            }
+
+            if (arr[j] > arr[j + 1]) {
+                swap(&arr[j], &arr[j + 1]);
+                operations++;
+            }
+        }
+        offset++;
+    }
+    return operations;
+}
 
 int main(void) {
+    const int SIZE = 40;
+    int arr[SIZE];
+    int arr2[SIZE];
+    fillArray(arr, SIZE);
+    fillArray(arr2, SIZE);
+    printArray(arr, SIZE);
+    printArray(arr2, SIZE);
 
-    /*
-     * 1. Реализовать функцию перевода из 10 системы в двоичную используя рекурсию
-    */
-    int num = 0;
-    printf("Enter an integer number, please: ");
-    scanf("%d", &num);
-    decToBin(num);
     printf("\n");
 
-    /*
-     * 2. Реализовать функцию возведения числа a в степень b без рекурсии
-     */
-    int power = 0;
-    num = 0;
-    printf("Enter an integer number and power, please: ");
-    scanf("%d", &num);
-    scanf("%d", &power);
+    printf("Bubble sort:\nMax number of operations: %d\nFact: %d\n", SIZE * SIZE, bubbleSort(arr, SIZE));
+    printArray(arr, SIZE);
 
-    printf("%d in %d power is %d", num, power, powerLoop(num, power));
-    printf("\n");
-
-    /*
-     * 2. Реализовать функцию возведения числа a в степень b рекуривно
-     */
-    printf("%d in %d power is %d", num, power, powerRecursion(num, power));
-    printf("\n");
-
-}
-
-void decToBin(int num) {
-    int result[INT_LENGTH] = {0};
-    decToBinStep(num, result, INT_LENGTH);
-
-    for (int i = 0; i < INT_LENGTH; ++i) {
-        printf("%d", result[i]);
-    }
-}
-
-void decToBinStep(int num, int *res, int position) {
-    if (num != 0) {
-        res[--position] = num % 2;
-        decToBinStep(num >> 1, res, position);
-    }
-}
-
-int powerLoop(int num, int power){
-    if(power == 0)
-        return 1;
-
-    int result = 1;
-    for (int i = 0; i < power; ++i) {
-        result *= num;
-    }
-
-    return result;
-}
-
-int powerRecursion(int num, int power){
-    if (power == 0)
-        return 1;
-    else if (power > 1)
-        return num * powerRecursion(num, --power);
+    printf("Modified bubble sort:\nMax number of operations: %d\nFact: %d\n", SIZE * SIZE, modifiedBubbleSort(arr2, SIZE));
+    printArray(arr2, SIZE);
 }
