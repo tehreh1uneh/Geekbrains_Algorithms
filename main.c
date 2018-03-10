@@ -1,91 +1,128 @@
 /*
 * ==================================================
-* == Lesson 3. Homework
+* == Lesson 4. Homework
 * == Student: Andrei Solovetov
-* == Date: 07-mar-2018
+* == Date: 10-mar-2018
 * "==================================================
 */
-
 #include <stdio.h>
-#include <stdlib.h>
 
-void fillArray(int *arr, int len) {
-    int i;
-    for (i = 0; i < len; i++)
-        arr[i] = rand() % 100;
-}
+#define X 6
+#define Y 8
 
-void printArray(int *arr, int len) {
-    int i;
-    for (i = 0; i < len; i++)
-        printf("%d ", arr[i]);
-    puts("");
-}
+struct point {
+    int x, y;
+};
+typedef struct point Point;
+int board[X][Y];
 
-void swap(int *a, int *b) {
-    *a ^= *b;
-    *b ^= *a;
-    *a ^= *b;
-}
-
-int bubbleSort(int *arr, int len) {
-    int operations = 0;
-    int i;
-    int j;
-    for (i = 0; i < len; i++)
-        for (j = 0; j < len - 1; j++)
-            if (arr[j] > arr[j + 1]) {
-                swap(&arr[j], &arr[j + 1]);
-                operations++;
-            }
-
-    return operations;
-}
-
-int modifiedBubbleSort(int *arr, int len) {
-    int operations = 0;
-    int i;
-    int j;
-    /*
-     * Отступ от правого края массива. На каждой итерации внешнего цикла в правую часть
-     * "всплывает" максимальный элемент, а значит есть смысл двигать правую границу влево
-     */
-    int offset = 0;
-
-    for (i = 0; i < len - offset; i++){
-        for (j = 0; j < len - offset - 1; j++) {
-            /*
-             * А почему бы не двигать значения через один элемент дополнительно ?
-             */
-            if (j < len - offset - 2 && arr[j] > arr[j + 2]) {
-                swap(&arr[j], &arr[j + 2]);
-                operations++;
-            }
-
-            if (arr[j] > arr[j + 1]) {
-                swap(&arr[j], &arr[j + 1]);
-                operations++;
-            }
-        }
-        offset++;
+void printBoard() {
+    for (int i = 0; i < Y; i++) {
+        for (int j = 0; j < X; j++)
+            printf("%4d", board[j][i]);
+        printf("\n");
     }
-    return operations;
+}
+
+void annull() {
+    for (int i = 0; i < Y; i++)
+        for (int j = 0; j < X; j++)
+            board[j][i] = 0;
+}
+
+int fillAndReturn(int x, int y, int res) {
+    board[x][y] = res;
+    return res;
+}
+
+void addBarrier(Point *barriers, int index, int x, int y) {
+    barriers[index].x = x;
+    barriers[index].y = y;
+}
+
+int waysNumber(int x, int y, Point barriers[], int barriersNumber) {
+    for (int i = 0; i < barriersNumber; ++i) {
+        if (barriers[i].x == x && barriers[i].y == y) {
+            return fillAndReturn(x, y, 0);
+        }
+    }
+
+    if (x == 0 && y == 0) {
+        return fillAndReturn(x, y, 1);
+    } else if (x == 0) {
+        return fillAndReturn(x, y, waysNumber(x, y - 1, barriers, barriersNumber));
+    } else if (y == 0) {
+        return fillAndReturn(x, y, waysNumber(x - 1, y, barriers, barriersNumber));
+    } else {
+        return fillAndReturn(x, y, waysNumber(x - 1, y, barriers, barriersNumber) +
+                                   waysNumber(x, y - 1, barriers, barriersNumber));
+    }
 }
 
 int main(void) {
-    const int SIZE = 40;
-    int arr[SIZE];
-    int arr2[SIZE];
-    fillArray(arr, SIZE);
-    fillArray(arr2, SIZE);
-    printArray(arr, SIZE);
-    printArray(arr2, SIZE);
+    /*
+     * Сначала проверяем корректно ли сработает без барьеров
+     */
+    {
+        Point barriers[0];
+        annull();
+        waysNumber(X, Y, barriers, 0);
+        printf("Without barriers:\n");
+        printBoard();
+        printf("\n");
+    }
 
-    printf("\n");
+    /*
+     * Добавляем барьер в первую ячейку
+     */
+    {
+        Point barriers[1];
+        addBarrier(barriers, 0, 0, 0);
+        annull();
+        waysNumber(X, Y, barriers, 1);
+        printf("Barrier in {1,1}:\n");
+        printBoard();
+        printf("\n");
+    }
 
-    printf("Bubble sort:\nMax number of operations: %d\nFact: %d\n", SIZE * SIZE, bubbleSort(arr, SIZE));
-    printArray(arr, SIZE);
+    /*
+     * Добавляем барьер в середину
+     */
+    {
+        Point barriers[1];
+        addBarrier(barriers, 0, 2, 2);
+        annull();
+        printf("Barrier in {3,3}:\n");
+        waysNumber(X, Y, barriers, 1);
+        printBoard();
+        printf("\n");
+    }
 
-    printf("Modified bubble sort:\nMax number of operations: %d\nFact: %d\n", SIZE * SIZE, modifiedBubbleSort(arr2, SIZE));
-    printArray(arr2, SIZE);
+    /*
+    * Добавляем барьер в последнюю ячейку
+    */
+    {
+        Point barriers[1];
+        addBarrier(barriers, 0, X - 1, Y - 1);
+        annull();
+        waysNumber(X, Y, barriers, 1);
+        printf("Barrier in {%d,%d}:\n", X, Y);
+        printBoard();
+        printf("\n");
+    }
+
+    /*
+     * Добавляем несколько барьеров
+     */
+    {
+        Point barriers[3];
+        addBarrier(barriers, 0, 0, 3);
+        addBarrier(barriers, 1, 1, 3);
+        addBarrier(barriers, 2, 4, 2);
+        annull();
+        waysNumber(X, Y, barriers, 3);
+        printf("Barriers in {1,4}, {2,4}, {5,3}:\n");
+        printBoard();
+        printf("\n");
+    }
 }
