@@ -1,132 +1,157 @@
 /*
 * ==================================================
-* == Lesson 4. Homework
+* == Lesson 5. Homework
 * == Student: Andrei Solovetov
-* == Date: 10-mar-2018
+* == Date: 15-mar-2018
 * "==================================================
 */
+
 #include <stdio.h>
+#include <stdlib.h>
 
-#define X 5
-#define Y 8
-int board[Y][X];
+#define T int
 
-struct point {
-    int x, y;
-};
-typedef struct point Point;
+typedef struct Node {
+    T data;
+    int index;
+    struct Node *next;
+    struct Node *prev;
+} Node;
 
-void printBoard() {
-    for (int y = 0; y < Y; y++) {
-        for (int x = 0; x < X; x++) {
-            printf("%4d", board[y][x]);
-        }
-        printf("\n");
+typedef struct Queue {
+    int size;
+    Node *head;
+    Node *tail;
+} Queue;
+
+typedef struct StackNode {
+    T data;
+    struct StackNode *prev;
+} StackNode;
+
+typedef struct Stack {
+    int size;
+    StackNode *head;
+} Stack;
+
+void push(Queue *queue, T value) {
+    Node *tmp = (Node *) malloc(sizeof(Node));
+    if (tmp == NULL) return;
+
+    tmp->data = value;
+    tmp->index = queue->size++;
+    tmp->prev = queue->tail;
+    tmp->next = NULL;
+
+    if (queue->tail != NULL)
+        queue->tail->next = tmp;
+    else
+        queue->head = tmp;
+
+    queue->tail = tmp;
+}
+
+T pop(Queue *queue) {
+    if (queue->size < 1) return -1;
+
+    Node *current = queue->head;
+    T result = queue->head->data;
+
+    queue->head = queue->head->next;
+
+    if (queue->size-- > 1)
+        queue->head->prev = NULL;
+    else
+        queue->tail = NULL;
+
+    free(current);
+    return result;
+}
+
+void pushToStack(Stack *stack, T value) {
+    StackNode *tmp = (StackNode *) malloc(sizeof(StackNode));
+    if (tmp == NULL) return;
+
+    tmp->data = value;
+    tmp->prev = stack->head;
+
+    stack->head = tmp;
+    stack->size++;
+}
+
+T popFromStack(Stack *stack) {
+    if (stack->size < 1) return -1;
+
+    StackNode *current = stack->head;
+    T result = stack->head->data;
+
+    stack->head = current->prev;
+    stack->size--;
+
+    free(current);
+    return result;
+}
+
+Stack decToBin(int value) {
+
+    Stack stack;
+    stack.head = NULL;
+    stack.size = 0;
+
+    while (value / 2 > 1){
+        pushToStack(&stack, value % 2);
+        value /= 2;
     }
+
+    pushToStack(&stack, value % 2);
+    pushToStack(&stack, value / 2);
+
+    return stack;
 }
 
-void annull() {
-    for (int y = 0; y < Y; y++)
-        for (int x = 0; x < X; x++)
-            board[y][x] = 0;
-}
-
-int fillAndReturn(int y, int x, int res) {
-    board[y][x] = res;
-    return res;
-}
-
-int waysNumber(int y, int x, Point *barriers, int barriersNumber) {
-    for (int i = 0; i < barriersNumber; i++) {
-        if (barriers[i].y == y && barriers[i].x == x) {
-            return fillAndReturn(y, x, 0);
-        }
-    }
-
-    if (x == 0 && y == 0) {
-        return fillAndReturn(y, x, 1);
-    } else if (x == 0) {
-        return fillAndReturn(y, x, waysNumber(y - 1, x, barriers, barriersNumber));
-    } else if (y == 0) {
-        return fillAndReturn(y, x, waysNumber(y, x - 1, barriers, barriersNumber));
-    } else {
-        return fillAndReturn(y, x, waysNumber(y - 1, x, barriers, barriersNumber) +
-                                   waysNumber(y, x - 1, barriers, barriersNumber));
-    }
-}
-
-void addBarrier(Point* barriers, int index, int y, int x){
-    barriers[index].y = y;
-    barriers[index].x = x;
-}
 
 int main(void) {
-    int lastXIndex = X - 1;
-    int lastYIndex = Y - 1;
 
-    /*
-     * Сначала проверяем корректно ли сработает без барьеров
-     */
-    {
-        Point barriers[0];
-        annull();
-        int res = waysNumber(lastYIndex, lastXIndex, barriers, 0);
-        printf("Without barriers: %d\n", res);
-        printBoard();
-        printf("\n");
-    }
+    printf("Queue test:\n");
 
-    /*
-     * Добавляем барьер в первую ячейку
-     */
-    {
-        Point barriers[1];
-        addBarrier(barriers, 0, 0, 0);
-        annull();
-        int res = waysNumber(lastYIndex, lastXIndex, barriers, 1);
-        printf("Barrier in {1,1}: %d\n", res);
-        printBoard();
-        printf("\n");
-    }
+    Queue queue;
+    queue.head = NULL;
+    queue.tail = NULL;
+    queue.size = 0;
 
-    /*
-     * Добавляем барьер в середину
-     */
-    {
-        Point barriers[1];
-        addBarrier(barriers, 0, 3, 2);
-        annull();
-        int res = waysNumber(lastYIndex, lastXIndex, barriers, 1);
-        printf("Barrier in {3,4}: %d\n", res);
-        printBoard();
-        printf("\n");
-    }
+    push(&queue, 7);
+    push(&queue, 9);
+    push(&queue, 18);
+    push(&queue, 4);
+    push(&queue, 6);
 
-    /*
-    * Добавляем барьер в последнюю ячейку
-    */
-    {
-        Point barriers[1];
-        addBarrier(barriers, 0, lastYIndex, lastXIndex);
-        annull();
-        int res = waysNumber(lastYIndex, lastXIndex, barriers, 1);
-        printf("Barrier in {%d,%d}: %d\n", X, Y, res);
-        printBoard();
-        printf("\n");
-    }
+    while (queue.size)
+        printf("%d ", pop(&queue));
+    printf("\n\n");
 
-    /*
-     * Добавляем несколько барьеров
-     */
-    {
-        Point barriers[3];
-        addBarrier(barriers, 0, 3, 0);
-        addBarrier(barriers, 1, 3, 1);
-        addBarrier(barriers, 2, 2, 4);
-        annull();
-        int res = waysNumber(lastYIndex, lastXIndex, barriers, 3);
-        printf("Barriers in {1,4} {2,4} {5,3}: %d\n", res);
-        printBoard();
-        printf("\n");
-    }
+    printf("Stack test:\n");
+    Stack stack;
+    stack.head = NULL;
+    stack.size = 0;
+
+    pushToStack(&stack, 1);
+    pushToStack(&stack, 2);
+    pushToStack(&stack, 3);
+    pushToStack(&stack, 4);
+    pushToStack(&stack, 5);
+
+    while (stack.size)
+        printf("%d ", popFromStack(&stack));
+    printf("\n\n");
+
+    printf("Dec to bin test:\n");
+
+    int num = 42317;
+    printf("%d -> ", num);
+    Stack bin = decToBin(num);
+
+    while (bin.size)
+        printf("%d", popFromStack(&bin));
+
+    printf("\n\n");
 }
