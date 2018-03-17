@@ -1,8 +1,8 @@
 /*
 * ==================================================
-* == Lesson 5. Homework
+* == Lesson 6. Homework
 * == Student: Andrei Solovetov
-* == Date: 15-mar-2018
+* == Date: 17-mar-2018
 * "==================================================
 */
 
@@ -13,145 +13,87 @@
 
 typedef struct Node {
     T data;
-    int index;
-    struct Node *next;
-    struct Node *prev;
+/*
+ * На занятии прописали parent, но он нигде не используется, а нужен ли вообще?
+ * Логично было бы заполнять, но в примерах в методичке этого нет.
+ */
+//    struct Node *parent;
+    struct Node *left;
+    struct Node *right;
 } Node;
 
-typedef struct Queue {
-    int size;
-    Node *head;
-    Node *tail;
-} Queue;
+// На занятии здесь было FILE file, странно, что компилятор не подсветил
+FILE *file;
 
-typedef struct StackNode {
-    T data;
-    struct StackNode *prev;
-} StackNode;
-
-typedef struct Stack {
-    int size;
-    StackNode *head;
-} Stack;
-
-void push(Queue *queue, T value) {
-    Node *tmp = (Node *) malloc(sizeof(Node));
-    if (tmp == NULL) return;
-
-    tmp->data = value;
-    tmp->index = queue->size++;
-    tmp->prev = queue->tail;
-    tmp->next = NULL;
-
-    if (queue->tail != NULL)
-        queue->tail->next = tmp;
-    else
-        queue->head = tmp;
-
-    queue->tail = tmp;
-}
-
-T pop(Queue *queue) {
-    if (queue->size < 1) return -1;
-
-    Node *current = queue->head;
-    T result = queue->head->data;
-
-    queue->head = queue->head->next;
-
-    if (queue->size-- > 1)
-        queue->head->prev = NULL;
-    else
-        queue->tail = NULL;
-
-    free(current);
-    return result;
-}
-
-void pushToStack(Stack *stack, T value) {
-    StackNode *tmp = (StackNode *) malloc(sizeof(StackNode));
-    if (tmp == NULL) return;
-
-    tmp->data = value;
-    tmp->prev = stack->head;
-
-    stack->head = tmp;
-    stack->size++;
-}
-
-T popFromStack(Stack *stack) {
-    if (stack->size < 1) return -1;
-
-    StackNode *current = stack->head;
-    T result = stack->head->data;
-
-    stack->head = current->prev;
-    stack->size--;
-
-    free(current);
-    return result;
-}
-
-Stack decToBin(int value) {
-
-    Stack stack;
-    stack.head = NULL;
-    stack.size = 0;
-
-    while (value / 2 > 1){
-        pushToStack(&stack, value % 2);
-        value /= 2;
+int simpleHash(const char *string, int length) {
+    int result = 0;
+    for (int i = 0; i < length; ++i) {
+        result += string[i];
     }
-
-    pushToStack(&stack, value % 2);
-    pushToStack(&stack, value / 2);
-
-    return stack;
+    return result;
 }
 
+// Копипаст с лекции
+Node *tree(int n) {
+    Node *newNode;
+    int nL;
+    int nR;
+    if (n == 0)
+        newNode = NULL;
+    else {
+        int value;
+        fscanf(file, "%d", &value);
+        nL = n / 2;
+        nR = n - nL - 1;
+        newNode = (Node *) malloc(sizeof(Node));
+        newNode->data = value;
+        newNode->left = tree(nL);
+        newNode->right = tree(nR);
+    }
+    return newNode;
+}
+
+// Копипаст с лекции
+void preOrderTravers(Node *root) {
+    if (root) {
+        printf("%d ", root->data);
+        preOrderTravers(root->left);
+        preOrderTravers(root->right);
+    }
+}
+
+void inOrderTravers(Node *root) {
+    if (root) {
+        inOrderTravers(root->left);
+        printf("%d ", root->data);
+        inOrderTravers(root->right);
+    }
+}
+
+void postOrderTravers(Node *root) {
+    if (root) {
+        postOrderTravers(root->left);
+        postOrderTravers(root->right);
+        printf("%d ", root->data);
+    }
+}
+
+Node *find(Node *root, T value) {
+    if (!root)
+        return NULL;
+
+    if (root->data == value)
+        return root;
+    else if (value > root->data)
+        return find(root->right, value);
+    else if (value < root->data)
+        return find(root->left, value);
+}
 
 int main(void) {
+    char *strHello = "Hello";
+    char *strSf = "San Francisco";
 
-    printf("Queue test:\n");
-
-    Queue queue;
-    queue.head = NULL;
-    queue.tail = NULL;
-    queue.size = 0;
-
-    push(&queue, 7);
-    push(&queue, 9);
-    push(&queue, 18);
-    push(&queue, 4);
-    push(&queue, 6);
-
-    while (queue.size)
-        printf("%d ", pop(&queue));
-    printf("\n\n");
-
-    printf("Stack test:\n");
-    Stack stack;
-    stack.head = NULL;
-    stack.size = 0;
-
-    pushToStack(&stack, 1);
-    pushToStack(&stack, 2);
-    pushToStack(&stack, 3);
-    pushToStack(&stack, 4);
-    pushToStack(&stack, 5);
-
-    while (stack.size)
-        printf("%d ", popFromStack(&stack));
-    printf("\n\n");
-
-    printf("Dec to bin test:\n");
-
-    int num = 42317;
-    printf("%d -> ", num);
-    Stack bin = decToBin(num);
-
-    while (bin.size)
-        printf("%d", popFromStack(&bin));
-
-    printf("\n\n");
+    printf("Hello: %d\n", simpleHash(strHello, 5));
+    printf("San Francisco: %d\n", simpleHash(strSf, 13));
 }
