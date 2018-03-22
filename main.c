@@ -50,7 +50,7 @@ void pushQ(Queue *q, GraphNode *value) {
     q->tail = tmp;
 }
 
-GraphNode popQ(Queue *q) {
+GraphNode *popQ(Queue *q) {
     if (q->size < 1) return NULL;
 
     GraphNode *current = q->head;
@@ -64,7 +64,7 @@ GraphNode popQ(Queue *q) {
         q->tail = NULL;
 
     free(current);
-    return *result;
+    return result;
 }
 
 void pushS(Stack *stack, T value) {
@@ -78,7 +78,7 @@ void pushS(Stack *stack, T value) {
     stack->size++;
 }
 
-GraphNode popS(Stack *stack) {
+GraphNode *popS(Stack *stack) {
     if (stack->size < 1) return NULL;
 
     GraphNode *current = stack->head;
@@ -87,7 +87,7 @@ GraphNode popS(Stack *stack) {
     stack->size--;
 
     free(current);
-    return *current;
+    return current;
 }
 
 void depthTravers(GraphNode *node) {
@@ -99,9 +99,9 @@ void depthTravers(GraphNode *node) {
      * Для каджого дочернего связанного узла вызываем рекурсивно
      * и убираем дочерний узел из стека дочерних
      */
-    while (node->children){
-        GraphNode child = popS(node->children);
-        depthTravers(&child);
+    while (node->children) {
+        GraphNode *child = popS(node->children);
+        depthTravers(child);
     }
 }
 
@@ -118,17 +118,17 @@ void widthTravers(GraphNode *start, Queue *q) {
         /*
          * Достаем узел из очереди
          */
-        GraphNode current = popQ(q);
+        GraphNode *current = popQ(q);
         /*
          * Каждый дочерний элемент полученного узла достаём из
          * списка дочерних элементов узла и если он не был ранее отправлен в очередь -
          * кладем его в очередь для дальнейшей обработки, помечая как пройденный
          */
-        while (current.children) {
-            GraphNode child = popS(current.children);
-            if (child.used == false) {
-                pushQ(q, &child);
-                child.used = true;
+        while (current->children) {
+            GraphNode *child = popS(current->children);
+            if (child->used == false) {
+                pushQ(q, child);
+                child->used = true;
             }
         }
     }
